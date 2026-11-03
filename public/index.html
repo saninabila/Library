@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perpustakaan Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans p-6">
+    <div class="max-w-3xl mx-auto">
+        <h1 class="text-3xl font-bold text-indigo-600 mb-6">📚 Perpustakaan Digital</h1>
+        
+        <!-- Form Tambah Buku -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Tambah Buku Baru</h2>
+            <form id="bookForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" id="title" placeholder="Judul Buku" required class="border p-2 rounded">
+                <input type="text" id="author" placeholder="Penulis" required class="border p-2 rounded">
+                <input type="text" id="category" placeholder="Kategori (Misal: Fiksi)" class="border p-2 rounded">
+                <input type="number" id="stock" placeholder="Stok" value="1" required class="border p-2 rounded">
+                <button type="submit" class="bg-indigo-600 text-white p-2 rounded sm:col-span-2 hover:bg-indigo-700">Simpan Buku</button>
+            </form>
+        </div>
+
+        <!-- Daftar Buku -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Daftar Koleksi Buku</h2>
+            <div id="bookList" class="space-y-3">
+                <p class="text-gray-500">Memuat data buku...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchBooks() {
+            try {
+                const res = await fetch('/api/books');
+                const result = await res.json();
+                const container = document.getElementById('bookList');
+                
+                if (result.data.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Belum ada buku di perpustakaan.</p>';
+                    return;
+                }
+
+                container.innerHTML = result.data.map(b => `
+                    <div class="border p-4 rounded flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-lg">${b.title}</h3>
+                            <p class="text-sm text-gray-600">Penulis: ${b.author} | Kategori: ${b.category}</p>
+                        </div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-semibold">Stok: ${b.stock}</span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.getElementById('bookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                category: document.getElementById('category').value,
+                stock: document.getElementById('stock').value,
+            };
+
+            const res = await fetch('/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                document.getElementById('bookForm').reset();
+                fetchBooks();
+            }
+        });
+
+        fetchBooks();
+    </script>
+</body>
+</html>
